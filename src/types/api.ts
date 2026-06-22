@@ -15,6 +15,7 @@
 // -----------------------------------------------------------------/
 
 import type { Analysis, PageData, CoreWebVitals, AiAnalysis, Finding } from './analysis'
+import type { GeminiOutput } from './gemini'
 
 export interface AnalyzeRequest {
   url: string
@@ -47,6 +48,8 @@ export interface BasicAnalyzeResponse {
   robotsData: { exists: boolean; userAgents: string[]; sitemapUrls: string[] }
   sitemapData: { exists: boolean; urlCount: number | null }
   imageData: { totalImages: number; imagesWithAlt: number; imagesWithoutAlt: number; coveragePercent: number }
+  // Best-effort Gemini recommendations
+  geminiOutput?: GeminiOutput
 }
 
 export interface AnalyzeStatusResponse {

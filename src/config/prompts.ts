@@ -1,49 +1,58 @@
-// ------------------------------------------------------------------
-// Gemini Prompts
-//
-// Purpose:
-//   The Gemini system prompt is the most iterated piece of text in
-//   the project. Separating it from code makes changes safe and
-//   reviewable.
-//
-// Responsibility:
-//   - Exports buildGeminiPrompt(pageData): string
-//   - Constructs a system prompt instructing Gemini to:
-//       1. Evaluate the page for AI-readiness
-//       2. Produce structured JSON output matching GeminiResponse
-//       3. Assign a score 0-100
-//       4. List strengths, weaknesses, recommendations
-//   - Uses XML-style <data> tags for the page context
-//   - Declares response_mime_type: application/json
-//
-// Dependencies:
-//   - types/gemini.ts (GeminiRequest, GeminiResponse)
-// -----------------------------------------------------------------/
+import type { BasicAnalyzeResponse } from '@/types/api'
 
-import type { GeminiRequest } from '@/types/gemini'
-
-export function buildGeminiPrompt(pageData: GeminiRequest): string {
-  return `
-You are an AI Readiness Auditor. Analyze the following webpage data and produce a structured assessment.
-
-<pageData>
-${JSON.stringify(pageData, null, 2)}
-</pageData>
-
-Evaluate the page on:
-1. Content clarity and semantic richness
-2. How easily an LLM could extract entities and relationships
-3. Structured data quality and completeness
-4. Technical SEO that affects AI crawlers
-5. Performance (poor performance reduces AI crawler budget)
-
-Respond with valid JSON following this schema:
-{
-  "aiReadinessScore": number (0-100),
-  "summary": string,
-  "strengths": string[],
-  "weaknesses": string[],
-  "recommendations": [{ "priority": "high"|"medium"|"low", "dimension": string, "description": string }]
+function buildFindingsContext(results: BasicAnalyzeResponse): string {
+  const lines: string[] = []
+  lines.push(`URL: ${results.url}`)
+  lines.push(`Overall Score: ${results.overallScore}`)
+  lines.push(``)
+  lines.push(`Dimension Scores:`)
+  lines.push(`  SEO:                ${results.seoScore}/100`)
+  lines.push(`  Heading Hierarchy:  ${results.headingHierarchyScore}/100`)
+  lines.push(`  Semantic HTML:      ${results.semanticHtmlScore}/100`)
+  lines.push(`  Structured Data:    ${results.structuredDataScore}/100`)
+  lines.push(`  Image Accessibility:${results.imageAccessibilityScore}/100`)
+  lines.push(`  Robots.txt:         ${results.robotsScore}/100`)
+  lines.push(`  Sitemap:            ${results.sitemapScore}/100`)
+  lines.push(``)
+  lines.push(`Passed Checks: ${results.findings.filter(f => f.passed).length}/${results.findings.length}`)
+  lines.push(``)
+  lines.push(`Failures:`)
+  for (const f of results.findings) {
+    if (!f.passed) lines.push(`  - ${f.description}`)
+  }
+  return lines.join('\n')
 }
+
+export function buildGeminiPrompt(results: BasicAnalyzeResponse): string {
+  return `
+You are an AI Readiness Advisor. Your ONLY job is to produce actionable recommendations based on the analysis data below.
+
+You MUST NOT produce scores or re-evaluate the page. The scores are already calculated deterministically and are final.
+
+<analysisData>
+${buildFindingsContext(results)}
+</analysisData>
+
+Based on the data above, produce a JSON object with exactly this schema:
+
+{
+  "summary": "2-3 sentence summary of the page's AI readiness state",
+  "topPriorities": ["2-3 high-level action items to focus on first"],
+  "recommendations": [
+    {
+      "priority": "critical" | "high" | "medium" | "low",
+      "dimension": "which dimension this relates to",
+      "action": "what to do, in clear actionable language",
+      "impact": "why this matters for AI readiness"
+    }
+  ]
+}
+
+Rules:
+- Max 10 recommendations, ordered by priority (critical first, low last).
+- Every recommendation must reference a specific finding from the failures above.
+- Be concise and actionable — each action should be 1-2 sentences.
+- Do NOT re-state the scores. Do NOT generate new scores.
+- Only output valid JSON, no markdown formatting.
 `.trim()
 }

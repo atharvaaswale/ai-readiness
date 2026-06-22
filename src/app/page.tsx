@@ -63,27 +63,27 @@ export default function HomePage() {
   return (
     <main className="mx-auto min-h-screen max-w-2xl px-4 py-12">
       <div className="mb-10 text-center">
-        <h1 className="text-3xl font-bold text-gray-900">
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">
           AI Readiness Analyzer
         </h1>
-        <p className="mt-2 text-gray-500">
+        <p className="mt-2 text-gray-500 dark:text-gray-400">
           Enter a URL to analyze its AI-readiness, SEO, and structure.
         </p>
       </div>
 
-      <div className="mb-8 rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+      <div className="mb-8 rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-900">
         <AnalysisForm onAnalyze={handleAnalyze} loading={state.phase === 'loading'} />
       </div>
 
       {state.phase === 'loading' && (
-        <div className="flex items-center justify-center gap-2 py-12 text-gray-400">
-          <span className="inline-block h-5 w-5 animate-spin rounded-full border-2 border-gray-300 border-t-blue-600" />
+        <div className="flex items-center justify-center gap-2 py-12 text-gray-400 dark:text-gray-500">
+          <span className="inline-block h-5 w-5 animate-spin rounded-full border-2 border-gray-300 border-t-blue-600 dark:border-gray-600 dark:border-t-blue-400" />
           <span>Analyzing page&hellip;</span>
         </div>
       )}
 
       {state.phase === 'error' && (
-        <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+        <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-800 dark:bg-red-950 dark:text-red-400">
           {state.message}
         </div>
       )}

@@ -39,6 +39,7 @@ import { analyzeRobots } from '@/lib/analyzers/robots'
 import { analyzeSitemap } from '@/lib/analyzers/sitemap'
 import { analyzeImages } from '@/lib/analyzers/images'
 import { AnalysisError } from '@/lib/utils/errors'
+import { callGemini } from '@/lib/api/gemini'
 import type { BasicAnalyzeResponse } from '@/types/api'
 
 export async function POST(request: Request) {
@@ -137,7 +138,9 @@ export async function POST(request: Request) {
       },
     }
 
-    return Response.json(response)
+    const geminiOutput = await callGemini(response).catch(() => null)
+
+    return Response.json({ ...response, geminiOutput })
   } catch (error) {
     if (error instanceof AnalysisError) {
       return Response.json(

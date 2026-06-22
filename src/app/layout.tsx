@@ -18,6 +18,7 @@
 
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
+import { ThemeToggle } from '@/components/theme-toggle'
 import './globals.css'
 
 const inter = Inter({ subsets: ['latin'] })
@@ -34,10 +35,26 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en">
-      <body className={`${inter.className} bg-gray-50 antialiased`}>
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function(){
+                var t = localStorage.getItem('theme');
+                if (t === 'dark' || (!t && matchMedia('(prefers-color-scheme:dark)').matches)) {
+                  document.documentElement.classList.add('dark');
+                }
+              })();
+            `,
+          }}
+        />
+      </head>
+      <body className={`${inter.className} antialiased`}>
+        <ThemeToggle />
         {children}
       </body>
     </html>
   )
 }
+
