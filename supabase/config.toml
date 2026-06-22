@@ -1,0 +1,12 @@
+# ------------------------------------------------------------------
+# AI Readiness Analyzer — Supabase CLI Configuration
+# ------------------------------------------------------------------
+[project]
+# managed by `supabase link`
+ref = ""
+
+[api]
+port = 54321
+
+[db]
+port = 54322
