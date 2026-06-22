@@ -28,9 +28,25 @@ export interface BasicAnalyzeResponse {
   url: string
   title: string | null
   h1Count: number
+  h2Count: number
+  h3Count: number
   metaDescription: string | null
   overallScore: number
   findings: Finding[]
+  // Per-dimension scores
+  seoScore: number
+  headingHierarchyScore: number
+  semanticHtmlScore: number
+  structuredDataScore: number
+  robotsScore: number
+  sitemapScore: number
+  imageAccessibilityScore: number
+  // Extended analysis data
+  semanticElements: { detected: string[]; missing: string[] }
+  detectedSchemas: string[]
+  robotsData: { exists: boolean; userAgents: string[]; sitemapUrls: string[] }
+  sitemapData: { exists: boolean; urlCount: number | null }
+  imageData: { totalImages: number; imagesWithAlt: number; imagesWithoutAlt: number; coveragePercent: number }
 }
 
 export interface AnalyzeStatusResponse {

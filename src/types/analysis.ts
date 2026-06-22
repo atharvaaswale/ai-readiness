@@ -98,11 +98,49 @@ export interface Recommendation {
   description: string
 }
 
-export interface SeoResult {
+// Shared interface all analyzers produce
+export interface AnalyzerResult {
   score: number
-  passed: number
-  failed: number
   findings: Finding[]
+}
+
+export interface SeoResult extends AnalyzerResult {
+  title: string | null
+  metaDescription: string | null
+}
+
+export interface HeadingHierarchyResult extends AnalyzerResult {
+  h1Count: number
+  h2Count: number
+  h3Count: number
+}
+
+export interface SemanticHtmlResult extends AnalyzerResult {
+  detected: string[]
+  missing: string[]
+}
+
+export interface StructuredDataResult extends AnalyzerResult {
+  detectedSchemas: string[]
+}
+
+export interface RobotsResult extends AnalyzerResult {
+  exists: boolean
+  content: string | null
+  userAgents: string[]
+  sitemapUrls: string[]
+}
+
+export interface SitemapResult extends AnalyzerResult {
+  exists: boolean
+  urlCount: number | null
+}
+
+export interface ImageAccessibilityResult extends AnalyzerResult {
+  totalImages: number
+  imagesWithAlt: number
+  imagesWithoutAlt: number
+  coveragePercent: number
 }
 
 export interface StructureResult {
