@@ -1,0 +1,14 @@
+﻿   Γû▓ Next.js 15.5.19
+   - Local:        http://localhost:3459
+   - Network:      http://192.168.1.4:3459
+   - Environments: .env.local
+
+ Γ£ô Starting...
+ Γ£ô Ready in 2.2s
+ Γùï Compiling / ...
+ Γ£ô Compiled / in 2.3s (569 modules)
+ GET / 200 in 2743ms
+ Γùï Compiling /api/analyze ...
+ Γ£ô Compiled /api/analyze in 877ms (849 modules)
+ POST /api/analyze 200 in 15075ms
+[?25h

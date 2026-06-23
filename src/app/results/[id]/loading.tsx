@@ -1,17 +1,16 @@
-// ------------------------------------------------------------------
-// Results Loading (route: /results/[id])
-//
-// Purpose:
-//   Shown while the results page data is loading (server fetch).
-//
-// Responsibility:
-//   Renders a 6-card skeleton grid matching the real dashboard layout
-//   for a consistent visual experience.
-//
-// Dependencies:
-//   - components/ui/skeleton.tsx
-// ------------------------------------------------------------------
-
 export default function ResultsLoading() {
-  return <div>{/* Skeleton grid */}</div>
+  return (
+    <main className="mx-auto max-w-2xl px-4 py-8">
+      <div className="animate-pulse space-y-8">
+        <div className="h-48 rounded-2xl bg-gray-200 dark:bg-gray-800" />
+        <div className="h-32 rounded-xl bg-gray-200 dark:bg-gray-800" />
+        <div className="grid grid-cols-2 gap-4">
+          <div className="h-28 rounded-xl bg-gray-200 dark:bg-gray-800" />
+          <div className="h-28 rounded-xl bg-gray-200 dark:bg-gray-800" />
+          <div className="h-28 rounded-xl bg-gray-200 dark:bg-gray-800" />
+          <div className="h-28 rounded-xl bg-gray-200 dark:bg-gray-800" />
+        </div>
+      </div>
+    </main>
+  )
 }

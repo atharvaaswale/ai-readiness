@@ -40,9 +40,13 @@ import { analyzeSitemap } from '@/lib/analyzers/sitemap'
 import { analyzeImages } from '@/lib/analyzers/images'
 import { AnalysisError } from '@/lib/utils/errors'
 import { callGemini } from '@/lib/api/gemini'
+import { buildReport } from '@/lib/scoring'
+import { createAnalysis, completeAnalysis, failAnalysis } from '@/lib/supabase/queries'
 import type { BasicAnalyzeResponse } from '@/types/api'
 
 export async function POST(request: Request) {
+  let analysisId: string | null = null
+
   try {
     let body: { url?: string }
 
@@ -61,21 +65,20 @@ export async function POST(request: Request) {
       return Response.json({ error: validation.error }, { status: 400 })
     }
 
+    analysisId = await createAnalysis(body.url)
+
     const page = await fetchHtml(validation.url)
     const html = page.html
 
-    // Run HTML-based analyzers (parallel-safe)
     const seoResult = analyzeSeo(html)
     const headingResult = analyzeHeadingHierarchy(html)
     const semanticResult = analyzeSemanticHtml(html)
     const sdResult = analyzeStructuredData(html)
     const imageResult = analyzeImages(html)
 
-    // Run external-resource analyzers (fetch calls)
     const robotsResult = await analyzeRobots(page.finalUrl)
     const sitemapResult = await analyzeSitemap(page.finalUrl, robotsResult.sitemapUrls)
 
-    // Combine all findings
     const allFindings = [
       ...seoResult.findings,
       ...headingResult.findings,
@@ -86,8 +89,7 @@ export async function POST(request: Request) {
       ...sitemapResult.findings,
     ]
 
-    // Compute overall score = average of all 7 dimension scores
-    const dimensionScores = [
+    const dimensionScoreValues = [
       seoResult.score,
       headingResult.score,
       semanticResult.score,
@@ -97,7 +99,23 @@ export async function POST(request: Request) {
       sitemapResult.score,
     ]
     const overallScore = Math.round(
-      dimensionScores.reduce((a, b) => a + b, 0) / dimensionScores.length
+      dimensionScoreValues.reduce((a, b) => a + b, 0) / dimensionScoreValues.length
+    )
+
+    const dimensionScores: Record<string, number> = {
+      seoScore: seoResult.score,
+      headingHierarchyScore: headingResult.score,
+      semanticHtmlScore: semanticResult.score,
+      structuredDataScore: sdResult.score,
+      imageAccessibilityScore: imageResult.score,
+      robotsScore: robotsResult.score,
+      sitemapScore: sitemapResult.score,
+    }
+
+    const { overallGrade, categories, prioritizedActions, executiveSummary } = buildReport(
+      overallScore,
+      dimensionScores,
+      allFindings
     )
 
     const response: BasicAnalyzeResponse = {
@@ -108,6 +126,10 @@ export async function POST(request: Request) {
       h3Count: headingResult.h3Count,
       metaDescription: seoResult.metaDescription,
       overallScore,
+      overallGrade,
+      categories,
+      prioritizedActions,
+      executiveSummary,
       findings: allFindings,
       seoScore: seoResult.score,
       headingHierarchyScore: headingResult.score,
@@ -140,8 +162,19 @@ export async function POST(request: Request) {
 
     const geminiOutput = await callGemini(response).catch(() => null)
 
-    return Response.json({ ...response, geminiOutput })
+    const finalResponse = { ...response, geminiOutput, analysisId }
+
+    if (analysisId) {
+      await completeAnalysis(analysisId, response)
+    }
+
+    return Response.json(finalResponse)
   } catch (error) {
+    if (analysisId) {
+      const message = error instanceof AnalysisError ? error.userMessage : 'Analysis failed'
+      await failAnalysis(analysisId, message)
+    }
+
     if (error instanceof AnalysisError) {
       return Response.json(
         { error: error.userMessage },

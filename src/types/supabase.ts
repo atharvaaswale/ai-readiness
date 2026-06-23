@@ -38,6 +38,12 @@ export type Database = {
           overall_score: number | null
           created_at: string
           completed_at: string | null
+          raw_response: Json | null
+          page_title: string | null
+          meta_description: string | null
+          h1_count: number | null
+          h2_count: number | null
+          h3_count: number | null
         }
         Insert: {
           id?: string
@@ -56,6 +62,12 @@ export type Database = {
           discoverability_score?: number | null
           overall_score?: number | null
           completed_at?: string | null
+          raw_response?: Json | null
+          page_title?: string | null
+          meta_description?: string | null
+          h1_count?: number | null
+          h2_count?: number | null
+          h3_count?: number | null
         }
       }
       page_data: {

@@ -1,29 +1,17 @@
-// ------------------------------------------------------------------
-// Landing Page (route: /)
-//
-// Purpose:
-//   Root route. Manages the analysis lifecycle state machine:
-//   idle → loading → results (or error).
-//
-// Responsibility:
-//   - Renders AnalysisForm at the top
-//   - Calls POST /api/analyze on form submit
-//   - Displays loading indicator while analysis runs
-//   - Shows ResultsDashboard on success
-//   - Shows error message on failure
-//
-// Dependencies:
-//   - components/analysis-form.tsx
-//   - components/results-dashboard.tsx
-//   - types/api.ts (BasicAnalyzeResponse)
-// ------------------------------------------------------------------
-
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { AnalysisForm } from '@/components/analysis-form'
 import { ResultsDashboard } from '@/components/results-dashboard'
 import type { BasicAnalyzeResponse } from '@/types/api'
+
+interface HistoryEntry {
+  id: string
+  url: string
+  score: number
+  grade: string
+  date: string
+}
 
 type PageState =
   | { phase: 'idle' }
@@ -33,6 +21,16 @@ type PageState =
 
 export default function HomePage() {
   const [state, setState] = useState<PageState>({ phase: 'idle' })
+  const [history, setHistory] = useState<HistoryEntry[]>([])
+
+  useEffect(() => {
+    const stored = localStorage.getItem('analysisHistory')
+    if (stored) {
+      try {
+        setHistory(JSON.parse(stored))
+      } catch { /* ignore */ }
+    }
+  }, [])
 
   async function handleAnalyze(url: string) {
     setState({ phase: 'loading' })
@@ -52,6 +50,19 @@ export default function HomePage() {
       }
 
       setState({ phase: 'results', data })
+
+      if (data.analysisId) {
+        const entry: HistoryEntry = {
+          id: data.analysisId,
+          url: data.url,
+          score: data.overallScore,
+          grade: data.overallGrade,
+          date: new Date().toISOString(),
+        }
+        const updated = [entry, ...history.filter((h) => h.id !== entry.id)].slice(0, 10)
+        setHistory(updated)
+        localStorage.setItem('analysisHistory', JSON.stringify(updated))
+      }
     } catch {
       setState({
         phase: 'error',
@@ -88,7 +99,46 @@ export default function HomePage() {
         </div>
       )}
 
-      {state.phase === 'results' && <ResultsDashboard results={state.data} />}
+      {state.phase === 'results' && (
+        <div className="space-y-4">
+          {state.data.analysisId && (
+            <div className="text-right">
+              <a
+                href={`/results/${state.data.analysisId}`}
+                className="text-xs text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 underline"
+              >
+                View permanent results page &rarr;
+              </a>
+            </div>
+          )}
+          <ResultsDashboard results={state.data} />
+        </div>
+      )}
+
+      {/* History */}
+      {history.length > 0 && (
+        <div className="mt-12">
+          <h2 className="mb-4 text-sm font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-widest">
+            Recent Analyses
+          </h2>
+          <div className="space-y-2">
+            {history.map((entry) => (
+              <a
+                key={entry.id}
+                href={`/results/${entry.id}`}
+                className="flex items-center justify-between rounded-lg border border-gray-200 p-3 text-sm transition-colors hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800"
+              >
+                <span className="truncate text-gray-700 dark:text-gray-300 max-w-md">
+                  {entry.url}
+                </span>
+                <span className="ml-3 shrink-0 font-semibold text-gray-500 dark:text-gray-400">
+                  {entry.grade} ({entry.score})
+                </span>
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
     </main>
   )
 }

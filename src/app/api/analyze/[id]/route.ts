@@ -1,25 +1,15 @@
-// ------------------------------------------------------------------
-// GET /api/analyze/[id]
-//
-// Purpose:
-//   Lightweight polling endpoint. The results page calls this every
-//   3 seconds until status changes to 'completed' or 'failed'.
-//
-// Responsibility:
-//   - Reads analyses.status from Supabase
-//   - Returns { status, overallScore? }
-//
-// Dependencies:
-//   - lib/supabase/server.ts
-//   - lib/supabase/queries.ts (getAnalysisStatus)
-//   - types/api.ts (AnalyzeStatusResponse)
-// -----------------------------------------------------------------/
+import { getAnalysisStatus } from '@/lib/supabase/queries'
 
 export async function GET(
-  request: Request,
+  _request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  // 1. Extract id from params
-  // 2. Query analyses table for status + score
-  // 3. Return { status, overallScore }
+  const { id } = await params
+
+  const result = await getAnalysisStatus(id)
+  if (!result) {
+    return Response.json({ error: 'Analysis not found' }, { status: 404 })
+  }
+
+  return Response.json(result)
 }

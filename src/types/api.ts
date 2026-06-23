@@ -16,6 +16,7 @@
 
 import type { Analysis, PageData, CoreWebVitals, AiAnalysis, Finding } from './analysis'
 import type { GeminiOutput } from './gemini'
+import type { Grade, CategoryScore, PrioritizedAction, ExecutiveSummary } from './report'
 
 export interface AnalyzeRequest {
   url: string
@@ -26,6 +27,7 @@ export interface AnalyzeResponse {
 }
 
 export interface BasicAnalyzeResponse {
+  analysisId?: string
   url: string
   title: string | null
   h1Count: number
@@ -33,6 +35,7 @@ export interface BasicAnalyzeResponse {
   h3Count: number
   metaDescription: string | null
   overallScore: number
+  overallGrade: Grade
   findings: Finding[]
   // Per-dimension scores
   seoScore: number
@@ -48,6 +51,10 @@ export interface BasicAnalyzeResponse {
   robotsData: { exists: boolean; userAgents: string[]; sitemapUrls: string[] }
   sitemapData: { exists: boolean; urlCount: number | null }
   imageData: { totalImages: number; imagesWithAlt: number; imagesWithoutAlt: number; coveragePercent: number }
+  // Professional report data
+  categories: CategoryScore[]
+  prioritizedActions: PrioritizedAction[]
+  executiveSummary: ExecutiveSummary
   // Best-effort Gemini recommendations
   geminiOutput?: GeminiOutput
 }
