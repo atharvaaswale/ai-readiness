@@ -2,11 +2,11 @@ import type { Finding } from './analysis'
 
 export type Grade = 'A+' | 'A' | 'B+' | 'B' | 'C' | 'D' | 'F'
 
-export type ImpactArea = 'SEO' | 'AI Discoverability' | 'Accessibility' | 'Technical'
+export type ImpactArea = 'SEO' | 'AI Discoverability' | 'Accessibility' | 'Technical' | 'Performance'
 
 export type Severity = 'critical' | 'high' | 'medium' | 'low'
 
-export type CategoryId = 'technical-seo' | 'content-structure' | 'ai-discoverability' | 'accessibility'
+export type CategoryId = 'technical-seo' | 'content-structure' | 'ai-discoverability' | 'accessibility' | 'performance'
 
 export interface CategoryScore {
   id: CategoryId

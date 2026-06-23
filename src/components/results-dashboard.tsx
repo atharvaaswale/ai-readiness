@@ -1,7 +1,9 @@
 'use client'
 
+import { useState, useRef } from 'react'
 import type { BasicAnalyzeResponse } from '@/types/api'
 import type { Grade, Severity } from '@/types/report'
+import { OptimizationChat } from './optimization-chat'
 
 function gradeColor(grade: Grade): string {
   if (grade === 'A+' || grade === 'A') return 'text-green-600 dark:text-green-400'
@@ -40,8 +42,35 @@ interface ResultsDashboardProps {
 }
 
 export function ResultsDashboard({ results }: ResultsDashboardProps) {
+  const [chatOpen, setChatOpen] = useState(false)
+  const panelRef = useRef<HTMLDivElement>(null)
+
   return (
     <div className="space-y-8">
+      {/* Chat toggle - visible on all screens */}
+      <button
+        onClick={() => setChatOpen(true)}
+        className="fixed bottom-6 right-6 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-blue-600 text-white shadow-lg hover:bg-blue-700 transition-colors"
+        aria-label="Open chat"
+      >
+        <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+        </svg>
+      </button>
+
+      {/* Chat panel - single responsive element */}
+      {chatOpen && (
+        <div className="fixed inset-0 z-50 bg-black/50" onClick={() => setChatOpen(false)}>
+          <div
+            ref={panelRef}
+            onClick={(e) => e.stopPropagation()}
+            className="fixed bottom-0 left-0 right-0 lg:right-4 lg:left-auto lg:top-24 lg:bottom-24 w-full lg:w-[22rem] flex flex-col max-h-[85vh] lg:max-h-none rounded-t-2xl lg:rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-5 shadow-xl"
+          >
+            <OptimizationChat results={results} onClose={() => setChatOpen(false)} isModal />
+          </div>
+        </div>
+      )}
+
       {/* Report Header */}
       <div className={`rounded-2xl border-2 p-8 text-center ${gradeBg(results.overallGrade)}`}>
         <p className="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
@@ -103,7 +132,7 @@ export function ResultsDashboard({ results }: ResultsDashboardProps) {
       </div>
 
       {/* Category Breakdown */}
-      <div>
+      <div className="rounded-xl border border-gray-200 p-6 dark:border-gray-700 dark:bg-gray-900">
         <h2 className="mb-4 text-sm font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-widest">
           Category Breakdown
         </h2>
@@ -137,7 +166,7 @@ export function ResultsDashboard({ results }: ResultsDashboardProps) {
       </div>
 
       {/* Per-dimension scores */}
-      <div>
+      <div className="rounded-xl border border-gray-200 p-6 dark:border-gray-700 dark:bg-gray-900">
         <h2 className="mb-4 text-sm font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-widest">
           Dimension Scores
         </h2>
@@ -148,6 +177,7 @@ export function ResultsDashboard({ results }: ResultsDashboardProps) {
             { label: 'Semantic HTML', score: results.semanticHtmlScore },
             { label: 'Structured Data', score: results.structuredDataScore },
             { label: 'Image Accessibility', score: results.imageAccessibilityScore },
+            { label: 'Performance', score: results.performanceScore },
             { label: 'Robots.txt', score: results.robotsScore },
             { label: 'Sitemap', score: results.sitemapScore },
           ].map((d) => (
@@ -162,8 +192,74 @@ export function ResultsDashboard({ results }: ResultsDashboardProps) {
         </div>
       </div>
 
+      {/* Performance */}
+      <div className="rounded-xl border border-gray-200 p-6 dark:border-gray-700 dark:bg-gray-900">
+        <h2 className="mb-1 text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-widest">
+          PageSpeed Performance
+        </h2>
+        {results.pageSpeedData.performanceScore !== null ? (
+          <>
+            <div className="mt-3 flex items-center gap-3">
+              <span className={`text-2xl font-black ${scoreColor(results.performanceScore)}`}>
+                {results.performanceScore}/100
+              </span>
+              <span className="text-sm text-gray-500 dark:text-gray-400">Performance Score</span>
+            </div>
+            <dl className="mt-4 space-y-2 text-sm">
+              {results.pageSpeedData.fcp && (
+                <div className="flex justify-between">
+                  <dt className="text-gray-500 dark:text-gray-400">FCP</dt>
+                  <dd className="font-medium text-gray-900 dark:text-gray-100">{results.pageSpeedData.fcp.display}</dd>
+                </div>
+              )}
+              {results.pageSpeedData.lcp && (
+                <div className="flex justify-between">
+                  <dt className="text-gray-500 dark:text-gray-400">LCP</dt>
+                  <dd className="font-medium text-gray-900 dark:text-gray-100">{results.pageSpeedData.lcp.display}</dd>
+                </div>
+              )}
+              {results.pageSpeedData.cls && (
+                <div className="flex justify-between">
+                  <dt className="text-gray-500 dark:text-gray-400">CLS</dt>
+                  <dd className="font-medium text-gray-900 dark:text-gray-100">{results.pageSpeedData.cls.display}</dd>
+                </div>
+              )}
+              {results.pageSpeedData.inp && (
+                <div className="flex justify-between">
+                  <dt className="text-gray-500 dark:text-gray-400">INP</dt>
+                  <dd className="font-medium text-gray-900 dark:text-gray-100">{results.pageSpeedData.inp.display}</dd>
+                </div>
+              )}
+              {results.pageSpeedData.tbt && (
+                <div className="flex justify-between">
+                  <dt className="text-gray-500 dark:text-gray-400">TBT</dt>
+                  <dd className="font-medium text-gray-900 dark:text-gray-100">{results.pageSpeedData.tbt.display}</dd>
+                </div>
+              )}
+              {results.pageSpeedData.speedIndex && (
+                <div className="flex justify-between">
+                  <dt className="text-gray-500 dark:text-gray-400">Speed Index</dt>
+                  <dd className="font-medium text-gray-900 dark:text-gray-100">{results.pageSpeedData.speedIndex.display}</dd>
+                </div>
+              )}
+            </dl>
+          </>
+        ) : (
+          <div>
+            <p className="mt-3 text-sm text-gray-400 dark:text-gray-500">
+              PageSpeed Insights data could not be fetched
+            </p>
+            {results.pageSpeedData.debug && (
+              <p className="mt-2 text-xs text-red-400 dark:text-red-500 break-all">
+                {results.pageSpeedData.debug}
+              </p>
+            )}
+          </div>
+        )}
+      </div>
+
       {/* Prioritized Actions */}
-      <div>
+      <div className="rounded-xl border border-gray-200 p-6 dark:border-gray-700 dark:bg-gray-900">
         <h2 className="mb-4 text-sm font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-widest">
           Prioritized Actions
         </h2>
@@ -244,8 +340,17 @@ export function ResultsDashboard({ results }: ResultsDashboardProps) {
         <dl className="mt-3 space-y-2 text-sm">
           <div className="flex justify-between">
             <dt className="text-gray-500 dark:text-gray-400">Title</dt>
-            <dd className="font-medium text-gray-900 dark:text-gray-100 max-w-md text-right truncate">
-              {results.title ?? <em className="text-gray-400 dark:text-gray-500">Not found</em>}
+            <dd className="max-w-md text-right">
+              {results.title != null ? (
+                <input
+                  readOnly
+                  type="text"
+                  value={results.title}
+                  className="font-medium text-gray-900 dark:text-gray-100 w-full bg-transparent border-0 p-0 focus:ring-0 cursor-default"
+                />
+              ) : (
+                <em className="text-gray-400 dark:text-gray-500">Not found</em>
+              )}
             </dd>
           </div>
           <div className="flex justify-between">
@@ -256,8 +361,15 @@ export function ResultsDashboard({ results }: ResultsDashboardProps) {
           </div>
           <div className="flex justify-between">
             <dt className="text-gray-500 dark:text-gray-400">Meta Description</dt>
-            <dd className="font-medium text-gray-900 dark:text-gray-100 max-w-md text-right truncate">
-              {results.metaDescription ?? (
+            <dd className="max-w-md text-right">
+              {results.metaDescription != null ? (
+                <input
+                  readOnly
+                  type="text"
+                  value={results.metaDescription}
+                  className="font-medium text-gray-900 dark:text-gray-100 w-full bg-transparent border-0 p-0 focus:ring-0 cursor-default"
+                />
+              ) : (
                 <em className="text-gray-400 dark:text-gray-500">Not found</em>
               )}
             </dd>
@@ -403,6 +515,7 @@ export function ResultsDashboard({ results }: ResultsDashboardProps) {
           ))}
         </ul>
       </div>
+
     </div>
   )
 }

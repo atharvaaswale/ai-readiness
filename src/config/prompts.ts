@@ -13,6 +13,7 @@ function buildFindingsContext(results: BasicAnalyzeResponse): string {
   lines.push(`  Image Accessibility:${results.imageAccessibilityScore}/100`)
   lines.push(`  Robots.txt:         ${results.robotsScore}/100`)
   lines.push(`  Sitemap:            ${results.sitemapScore}/100`)
+  lines.push(`  Performance:        ${results.performanceScore}/100`)
   lines.push(``)
   lines.push(`Passed Checks: ${results.findings.filter(f => f.passed).length}/${results.findings.length}`)
   lines.push(``)

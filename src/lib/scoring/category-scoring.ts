@@ -28,6 +28,11 @@ const CATEGORIES: CategoryDef[] = [
     label: 'Accessibility',
     dimensionKeys: ['imageAccessibilityScore'],
   },
+  {
+    id: 'performance',
+    label: 'Performance',
+    dimensionKeys: ['performanceScore'],
+  },
 ]
 
 export function computeCategories(dimensionScores: Record<string, number>): CategoryScore[] {

@@ -22,7 +22,7 @@
 NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
 SUPABASE_SERVICE_ROLE_KEY=
-PAGESPEED_API_KEY=
+GOOGLE_PSI_API_KEY=
 GEMINI_API_KEY=
 ```
 
@@ -377,7 +377,7 @@ Each analyzer is a function that receives parsed HTML + headers and returns a ty
 |---|---|
 | **Why it exists** | Encapsulates Google PageSpeed Insights API interaction behind a typed function. |
 | **Responsibility** | Fetches `GET https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=...&key=...`. Parses the Lighthouse result for `lcp`, `fid`, `inp`, `cls`, and `performance_score`. Includes retry logic (exponential backoff, max 3 retries) and timeout (10s). Returns typed result or throws. |
-| **Data flow** | **Input:** `url: string`. **Internal:** HTTP fetch with `PAGESPEED_API_KEY`. **Output:** `{ lcp, fid, inp, cls, performanceScore, rawResponse }`. |
+| **Data flow** | **Input:** `url: string`. **Internal:** HTTP fetch with `GOOGLE_PSI_API_KEY`. **Output:** `{ lcp, fid, inp, cls, performanceScore, rawResponse }`. |
 
 #### `gemini.ts`
 

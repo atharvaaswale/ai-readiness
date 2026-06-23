@@ -27,6 +27,9 @@ function buildStrengths(findings: Finding[], categories: CategoryScore[]): strin
   if (categories.find((c) => c.id === 'accessibility' && c.score >= 75)) {
     result.push('Good image accessibility coverage')
   }
+  if (categories.find((c) => c.id === 'performance' && c.score >= 75)) {
+    result.push('Good performance with fast Core Web Vitals')
+  }
   return result
 }
 
@@ -55,6 +58,9 @@ function buildWeaknesses(findings: Finding[], categories: CategoryScore[]): stri
   )
   if (headingIssues.length > 0) {
     result.push('Heading hierarchy improvements needed')
+  }
+  if (categories.find((c) => c.id === 'performance' && c.score < 60)) {
+    result.push('Page performance needs improvement')
   }
   return result
 }

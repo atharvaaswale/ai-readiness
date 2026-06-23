@@ -157,3 +157,21 @@ export interface DiscoverabilityResult {
   score: number
   findings: Finding[]
 }
+
+export interface PageSpeedMetric {
+  value: number
+  display: string
+}
+
+export interface PerformanceResult extends AnalyzerResult {
+  pageSpeedData: {
+    performanceScore: number | null
+    fcp: PageSpeedMetric | null
+    lcp: PageSpeedMetric | null
+    cls: PageSpeedMetric | null
+    inp: PageSpeedMetric | null
+    tbt: PageSpeedMetric | null
+    speedIndex: PageSpeedMetric | null
+    debug?: string
+  }
+}

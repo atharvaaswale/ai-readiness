@@ -66,7 +66,7 @@ export function AnalysisForm({ onAnalyze, loading }: AnalysisFormProps) {
     <form onSubmit={handleSubmit} className="space-y-4">
       <Input
         label="Website URL"
-        type="url"
+        type="text"
         placeholder="https://example.com"
         value={url}
         onChange={(e) => {

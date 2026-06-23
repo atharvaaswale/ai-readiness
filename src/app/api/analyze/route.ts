@@ -3,18 +3,21 @@
 //
 // Purpose:
 //   Synchronous endpoint. Validates URL, fetches HTML and auxiliary
-//   resources (robots.txt, sitemap.xml), runs all deterministic
-//   analyzers, computes multi-dimensional score, and returns results.
+//   resources (robots.txt, sitemap.xml, PageSpeed), runs all
+//   deterministic analyzers, computes multi-dimensional score,
+//   and returns results.
 //
 // Responsibility:
 //   - Parses and validates request body
 //   - Validates URL format via validateUrl()
 //   - Fetches HTML via fetchHtml()
+//   - Fetches PageSpeed Insights data
 //   - Fetches and parses /robots.txt
 //   - Fetches and parses XML sitemap
-//   - Runs 7 analyzers: SEO, Heading Hierarchy, Semantic HTML,
-//     Structured Data, Robots.txt, Sitemap, Image Accessibility
-//   - Computes overall score = average of all 7 dimension scores
+//   - Runs 8 analyzers: SEO, Heading Hierarchy, Semantic HTML,
+//     Structured Data, Robots.txt, Sitemap, Image Accessibility,
+//     Performance
+//   - Computes overall score = average of all 8 dimension scores
 //   - Returns typed JSON response or appropriate error
 //
 // Dependencies:
@@ -26,6 +29,8 @@
 //   - lib/analyzers/robots.ts
 //   - lib/analyzers/sitemap.ts
 //   - lib/analyzers/images.ts
+//   - lib/analyzers/performance.ts
+//   - lib/api/pagespeed.ts
 //   - lib/utils/errors.ts (AnalysisError)
 //   - types/api.ts (BasicAnalyzeResponse)
 // ------------------------------------------------------------------
@@ -38,6 +43,8 @@ import { analyzeStructuredData } from '@/lib/analyzers/discoverability'
 import { analyzeRobots } from '@/lib/analyzers/robots'
 import { analyzeSitemap } from '@/lib/analyzers/sitemap'
 import { analyzeImages } from '@/lib/analyzers/images'
+import { analyzePerformance } from '@/lib/analyzers/performance'
+import { fetchPageSpeed } from '@/lib/api/pagespeed'
 import { AnalysisError } from '@/lib/utils/errors'
 import { callGemini } from '@/lib/api/gemini'
 import { buildReport } from '@/lib/scoring'
@@ -67,7 +74,10 @@ export async function POST(request: Request) {
 
     analysisId = await createAnalysis(body.url)
 
-    const page = await fetchHtml(validation.url)
+    const [page, pageSpeedData] = await Promise.all([
+      fetchHtml(validation.url),
+      fetchPageSpeed(validation.url),
+    ])
     const html = page.html
 
     const seoResult = analyzeSeo(html)
@@ -75,6 +85,7 @@ export async function POST(request: Request) {
     const semanticResult = analyzeSemanticHtml(html)
     const sdResult = analyzeStructuredData(html)
     const imageResult = analyzeImages(html)
+    const performanceResult = analyzePerformance(pageSpeedData)
 
     const robotsResult = await analyzeRobots(page.finalUrl)
     const sitemapResult = await analyzeSitemap(page.finalUrl, robotsResult.sitemapUrls)
@@ -85,6 +96,7 @@ export async function POST(request: Request) {
       ...semanticResult.findings,
       ...sdResult.findings,
       ...imageResult.findings,
+      ...performanceResult.findings,
       ...robotsResult.findings,
       ...sitemapResult.findings,
     ]
@@ -95,6 +107,7 @@ export async function POST(request: Request) {
       semanticResult.score,
       sdResult.score,
       imageResult.score,
+      performanceResult.score,
       robotsResult.score,
       sitemapResult.score,
     ]
@@ -108,6 +121,7 @@ export async function POST(request: Request) {
       semanticHtmlScore: semanticResult.score,
       structuredDataScore: sdResult.score,
       imageAccessibilityScore: imageResult.score,
+      performanceScore: performanceResult.score,
       robotsScore: robotsResult.score,
       sitemapScore: sitemapResult.score,
     }
@@ -138,6 +152,7 @@ export async function POST(request: Request) {
       robotsScore: robotsResult.score,
       sitemapScore: sitemapResult.score,
       imageAccessibilityScore: imageResult.score,
+      performanceScore: performanceResult.score,
       semanticElements: {
         detected: semanticResult.detected,
         missing: semanticResult.missing,
@@ -157,6 +172,16 @@ export async function POST(request: Request) {
         imagesWithAlt: imageResult.imagesWithAlt,
         imagesWithoutAlt: imageResult.imagesWithoutAlt,
         coveragePercent: imageResult.coveragePercent,
+      },
+      pageSpeedData: {
+        performanceScore: performanceResult.pageSpeedData.performanceScore,
+        fcp: performanceResult.pageSpeedData.fcp,
+        lcp: performanceResult.pageSpeedData.lcp,
+        cls: performanceResult.pageSpeedData.cls,
+        inp: performanceResult.pageSpeedData.inp,
+        tbt: performanceResult.pageSpeedData.tbt,
+        speedIndex: performanceResult.pageSpeedData.speedIndex,
+        debug: performanceResult.pageSpeedData.debug,
       },
     }
 

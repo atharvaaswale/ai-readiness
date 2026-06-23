@@ -45,12 +45,23 @@ export interface BasicAnalyzeResponse {
   robotsScore: number
   sitemapScore: number
   imageAccessibilityScore: number
+  performanceScore: number
   // Extended analysis data
   semanticElements: { detected: string[]; missing: string[] }
   detectedSchemas: string[]
   robotsData: { exists: boolean; userAgents: string[]; sitemapUrls: string[] }
   sitemapData: { exists: boolean; urlCount: number | null }
   imageData: { totalImages: number; imagesWithAlt: number; imagesWithoutAlt: number; coveragePercent: number }
+  pageSpeedData: {
+    performanceScore: number | null
+    fcp: { value: number; display: string } | null
+    lcp: { value: number; display: string } | null
+    cls: { value: number; display: string } | null
+    inp: { value: number; display: string } | null
+    tbt: { value: number; display: string } | null
+    speedIndex: { value: number; display: string } | null
+    debug?: string
+  }
   // Professional report data
   categories: CategoryScore[]
   prioritizedActions: PrioritizedAction[]

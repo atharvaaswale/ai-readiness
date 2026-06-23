@@ -72,7 +72,7 @@ export default function HomePage() {
   }
 
   return (
-    <main className="mx-auto min-h-screen max-w-2xl px-4 py-12">
+    <main className="mx-auto min-h-screen max-w-5xl px-4 py-12">
       <div className="mb-10 text-center">
         <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">
           AI Readiness Analyzer
@@ -82,7 +82,7 @@ export default function HomePage() {
         </p>
       </div>
 
-      <div className="mb-8 rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-900">
+      <div className="mb-8 rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-900 max-w-4xl mx-auto">
         <AnalysisForm onAnalyze={handleAnalyze} loading={state.phase === 'loading'} />
       </div>
 
@@ -100,7 +100,7 @@ export default function HomePage() {
       )}
 
       {state.phase === 'results' && (
-        <div className="space-y-4">
+        <div className="space-y-4 max-w-4xl mx-auto">
           {state.data.analysisId && (
             <div className="text-right">
               <a
@@ -117,7 +117,7 @@ export default function HomePage() {
 
       {/* History */}
       {history.length > 0 && (
-        <div className="mt-12">
+        <div className="mt-12 max-w-4xl mx-auto">
           <h2 className="mb-4 text-sm font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-widest">
             Recent Analyses
           </h2>

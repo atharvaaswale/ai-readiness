@@ -40,5 +40,6 @@ function mapFindingCategory(category: string): string {
   if (category === 'Structured Data') return 'ai-discoverability'
   if (category === 'Image Accessibility') return 'accessibility'
   if (category === 'Robots.txt' || category === 'Sitemap') return 'technical-seo'
+  if (category === 'Performance') return 'performance'
   return 'technical-seo'
 }
