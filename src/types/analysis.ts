@@ -175,3 +175,34 @@ export interface PerformanceResult extends AnalyzerResult {
     debug?: string
   }
 }
+
+export interface LlmsTxtResult {
+  exists: boolean
+  contentLength: number | null
+  findings: Finding[]
+}
+
+export interface AeoExtractedContent {
+  title: string | null
+  metaDescription: string | null
+  headings: { h1: string[]; h2: string[]; h3: string[] }
+  visibleContentSnippet: string
+  schemaTypes: string[]
+  robotsTxtExists: boolean
+  sitemapExists: boolean
+  llmsTxtExists: boolean
+  llmsTxtContentLength: number | null
+}
+
+export interface AeoResult {
+  score: number | null
+  clarity: number | null
+  authority: number | null
+  answerability: number | null
+  entityRecognition: number | null
+  citationReadiness: number | null
+  summary: string | null
+  recommendations: string[]
+  extractedContent: AeoExtractedContent
+  llmsTxt: LlmsTxtResult
+}

@@ -10,3 +10,14 @@ export interface GeminiOutput {
   topPriorities: string[]
   recommendations: GeminiRecommendation[]
 }
+
+export interface AeoGeminiOutput {
+  aeoScore: number
+  clarity: number
+  authority: number
+  answerability: number
+  entityRecognition: number
+  citationReadiness: number
+  summary: string
+  recommendations: string[]
+}

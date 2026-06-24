@@ -6,7 +6,7 @@ export type ImpactArea = 'SEO' | 'AI Discoverability' | 'Accessibility' | 'Techn
 
 export type Severity = 'critical' | 'high' | 'medium' | 'low'
 
-export type CategoryId = 'technical-seo' | 'content-structure' | 'ai-discoverability' | 'accessibility' | 'performance'
+export type CategoryId = 'technical-seo' | 'content-structure' | 'ai-discoverability' | 'accessibility' | 'performance' | 'aeo'
 
 export interface CategoryScore {
   id: CategoryId

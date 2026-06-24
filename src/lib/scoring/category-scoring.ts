@@ -33,6 +33,11 @@ const CATEGORIES: CategoryDef[] = [
     label: 'Performance',
     dimensionKeys: ['performanceScore'],
   },
+  {
+    id: 'aeo',
+    label: 'Answer Engine Optimization',
+    dimensionKeys: ['aeoScore'],
+  },
 ]
 
 export function computeCategories(dimensionScores: Record<string, number>): CategoryScore[] {

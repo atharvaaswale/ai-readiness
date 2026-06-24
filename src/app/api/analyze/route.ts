@@ -1,40 +1,3 @@
-// ------------------------------------------------------------------
-// POST /api/analyze
-//
-// Purpose:
-//   Synchronous endpoint. Validates URL, fetches HTML and auxiliary
-//   resources (robots.txt, sitemap.xml, PageSpeed), runs all
-//   deterministic analyzers, computes multi-dimensional score,
-//   and returns results.
-//
-// Responsibility:
-//   - Parses and validates request body
-//   - Validates URL format via validateUrl()
-//   - Fetches HTML via fetchHtml()
-//   - Fetches PageSpeed Insights data
-//   - Fetches and parses /robots.txt
-//   - Fetches and parses XML sitemap
-//   - Runs 8 analyzers: SEO, Heading Hierarchy, Semantic HTML,
-//     Structured Data, Robots.txt, Sitemap, Image Accessibility,
-//     Performance
-//   - Computes overall score = average of all 8 dimension scores
-//   - Returns typed JSON response or appropriate error
-//
-// Dependencies:
-//   - lib/validators/url.ts
-//   - lib/html/fetcher.ts
-//   - lib/analyzers/seo.ts
-//   - lib/analyzers/structure.ts
-//   - lib/analyzers/discoverability.ts
-//   - lib/analyzers/robots.ts
-//   - lib/analyzers/sitemap.ts
-//   - lib/analyzers/images.ts
-//   - lib/analyzers/performance.ts
-//   - lib/api/pagespeed.ts
-//   - lib/utils/errors.ts (AnalysisError)
-//   - types/api.ts (BasicAnalyzeResponse)
-// ------------------------------------------------------------------
-
 import { validateUrl } from '@/lib/validators/url'
 import { fetchHtml } from '@/lib/html/fetcher'
 import { analyzeSeo } from '@/lib/analyzers/seo'
@@ -44,10 +7,12 @@ import { analyzeRobots } from '@/lib/analyzers/robots'
 import { analyzeSitemap } from '@/lib/analyzers/sitemap'
 import { analyzeImages } from '@/lib/analyzers/images'
 import { analyzePerformance } from '@/lib/analyzers/performance'
+import { analyzeLlmsTxt, extractAeoContent } from '@/lib/analyzers/aeo'
 import { fetchPageSpeed } from '@/lib/api/pagespeed'
 import { AnalysisError } from '@/lib/utils/errors'
-import { callGemini } from '@/lib/api/gemini'
+import { callGemini, callAeoGemini } from '@/lib/api/gemini'
 import { buildReport } from '@/lib/scoring'
+import { computeGrade } from '@/lib/scoring/grading'
 import { createAnalysis, completeAnalysis, failAnalysis } from '@/lib/supabase/queries'
 import type { BasicAnalyzeResponse } from '@/types/api'
 
@@ -89,6 +54,14 @@ export async function POST(request: Request) {
 
     const robotsResult = await analyzeRobots(page.finalUrl)
     const sitemapResult = await analyzeSitemap(page.finalUrl, robotsResult.sitemapUrls)
+    const llmsTxtResult = await analyzeLlmsTxt(page.finalUrl)
+
+    const aeoContent = extractAeoContent(
+      html,
+      robotsResult.exists,
+      sitemapResult.exists,
+      llmsTxtResult
+    )
 
     const allFindings = [
       ...seoResult.findings,
@@ -99,9 +72,10 @@ export async function POST(request: Request) {
       ...performanceResult.findings,
       ...robotsResult.findings,
       ...sitemapResult.findings,
+      ...llmsTxtResult.findings,
     ]
 
-    const dimensionScoreValues = [
+    const deterministicScoreValues = [
       seoResult.score,
       headingResult.score,
       semanticResult.score,
@@ -111,8 +85,8 @@ export async function POST(request: Request) {
       robotsResult.score,
       sitemapResult.score,
     ]
-    const overallScore = Math.round(
-      dimensionScoreValues.reduce((a, b) => a + b, 0) / dimensionScoreValues.length
+    const deterministicOverall = Math.round(
+      deterministicScoreValues.reduce((a, b) => a + b, 0) / deterministicScoreValues.length
     )
 
     const dimensionScores: Record<string, number> = {
@@ -127,7 +101,7 @@ export async function POST(request: Request) {
     }
 
     const { overallGrade, categories, prioritizedActions, executiveSummary } = buildReport(
-      overallScore,
+      deterministicOverall,
       dimensionScores,
       allFindings
     )
@@ -139,7 +113,7 @@ export async function POST(request: Request) {
       h2Count: headingResult.h2Count,
       h3Count: headingResult.h3Count,
       metaDescription: seoResult.metaDescription,
-      overallScore,
+      overallScore: deterministicOverall,
       overallGrade,
       categories,
       prioritizedActions,
@@ -183,11 +157,47 @@ export async function POST(request: Request) {
         speedIndex: performanceResult.pageSpeedData.speedIndex,
         debug: performanceResult.pageSpeedData.debug,
       },
+      aeoScore: null,
+      aeoData: {
+        title: aeoContent.title,
+        metaDescription: aeoContent.metaDescription,
+        headings: aeoContent.headings,
+        visibleContentSnippet: aeoContent.visibleContentSnippet,
+        schemaTypes: aeoContent.schemaTypes,
+        robotsTxtExists: aeoContent.robotsTxtExists,
+        sitemapExists: aeoContent.sitemapExists,
+        llmsTxt: {
+          exists: llmsTxtResult.exists,
+          contentLength: llmsTxtResult.contentLength,
+        },
+      },
     }
 
-    const geminiOutput = await callGemini(response).catch(() => null)
+    const [geminiOutput, aeoAnalysis] = await Promise.all([
+      callGemini(response).catch(() => null),
+      callAeoGemini(aeoContent).catch(() => null),
+    ])
 
-    const finalResponse = { ...response, geminiOutput, analysisId }
+    const aeoScore = aeoAnalysis?.aeoScore ?? null
+
+    if (aeoScore !== null) {
+      dimensionScores.aeoScore = aeoScore
+    }
+
+    const allScoreValues = Object.values(dimensionScores)
+    const finalOverallScore = Math.round(
+      allScoreValues.reduce((a, b) => a + b, 0) / allScoreValues.length
+    )
+
+    const finalResponse: BasicAnalyzeResponse = {
+      ...response,
+      overallScore: finalOverallScore,
+      overallGrade: computeGrade(finalOverallScore),
+      aeoScore,
+      aeoAnalysis: aeoAnalysis ?? undefined,
+      geminiOutput: geminiOutput ?? undefined,
+      analysisId: analysisId ?? undefined,
+    }
 
     if (analysisId) {
       await completeAnalysis(analysisId, response)

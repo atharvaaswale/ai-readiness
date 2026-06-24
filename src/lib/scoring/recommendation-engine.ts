@@ -57,6 +57,11 @@ const CATEGORY_MAP: Record<string, { area: ImpactArea; criticalFindings: string[
     criticalFindings: ['performance score is poor', 'first contentful paint is slow', 'largest contentful paint is slow', 'cumulative layout shift is poor', 'interaction to next paint is poor', 'total blocking time is high', 'speed index is slow'],
     highFindings: ['performance data could not be fetched'],
   },
+  'AEO': {
+    area: 'AI Discoverability',
+    criticalFindings: ['/llms.txt could not be fetched'],
+    highFindings: ['/llms.txt returned'],
+  },
 }
 
 const SEVERITY_ORDER: Severity[] = ['critical', 'high', 'medium', 'low']

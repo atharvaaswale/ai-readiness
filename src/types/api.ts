@@ -15,7 +15,7 @@
 // -----------------------------------------------------------------/
 
 import type { Analysis, PageData, CoreWebVitals, AiAnalysis, Finding } from './analysis'
-import type { GeminiOutput } from './gemini'
+import type { GeminiOutput, AeoGeminiOutput } from './gemini'
 import type { Grade, CategoryScore, PrioritizedAction, ExecutiveSummary } from './report'
 
 export interface AnalyzeRequest {
@@ -68,6 +68,19 @@ export interface BasicAnalyzeResponse {
   executiveSummary: ExecutiveSummary
   // Best-effort Gemini recommendations
   geminiOutput?: GeminiOutput
+  // AEO (Answer Engine Optimization)
+  aeoScore: number | null
+  aeoAnalysis?: AeoGeminiOutput
+  aeoData: {
+    title: string | null
+    metaDescription: string | null
+    headings: { h1: string[]; h2: string[]; h3: string[] }
+    visibleContentSnippet: string
+    schemaTypes: string[]
+    robotsTxtExists: boolean
+    sitemapExists: boolean
+    llmsTxt: { exists: boolean; contentLength: number | null }
+  }
 }
 
 export interface AnalyzeStatusResponse {

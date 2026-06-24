@@ -41,5 +41,6 @@ function mapFindingCategory(category: string): string {
   if (category === 'Image Accessibility') return 'accessibility'
   if (category === 'Robots.txt' || category === 'Sitemap') return 'technical-seo'
   if (category === 'Performance') return 'performance'
+  if (category === 'AEO') return 'aeo'
   return 'technical-seo'
 }

@@ -180,13 +180,18 @@ export function ResultsDashboard({ results }: ResultsDashboardProps) {
             { label: 'Performance', score: results.performanceScore },
             { label: 'Robots.txt', score: results.robotsScore },
             { label: 'Sitemap', score: results.sitemapScore },
+            { label: 'AEO', score: results.aeoScore },
           ].map((d) => (
             <div
               key={d.label}
               className="flex items-center justify-between rounded-lg border border-gray-200 p-3 dark:border-gray-700 dark:bg-gray-900"
             >
               <span className="text-sm text-gray-600 dark:text-gray-400">{d.label}</span>
+              {d.score !== null ? (
               <span className={`text-sm font-bold ${scoreColor(d.score)}`}>{d.score}</span>
+            ) : (
+              <span className="text-sm text-gray-400 dark:text-gray-500">N/A</span>
+            )}
             </div>
           ))}
         </div>
@@ -331,6 +336,107 @@ export function ResultsDashboard({ results }: ResultsDashboardProps) {
           )}
         </div>
       )}
+
+      {/* AEO (Answer Engine Optimization) */}
+      {results.aeoAnalysis ? (
+        <div className="rounded-xl border border-purple-200 bg-purple-50 p-6 dark:border-purple-800 dark:bg-purple-950">
+          <h2 className="mb-1 text-xs font-semibold text-purple-500 dark:text-purple-300 uppercase tracking-widest">
+            Answer Engine Optimization (AEO)
+          </h2>
+
+          {/* AEO Score */}
+          <div className="mt-4 flex items-center gap-4">
+            <span className={`text-4xl font-black ${scoreColor(results.aeoScore ?? 0)}`}>
+              {results.aeoScore}/100
+            </span>
+            <span className="text-sm text-gray-500 dark:text-gray-400">AEO Score (Gemini-evaluated)</span>
+          </div>
+
+          {/* Dimension Breakdown */}
+          <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
+            {[
+              { label: 'Clarity', score: results.aeoAnalysis.clarity },
+              { label: 'Authority', score: results.aeoAnalysis.authority },
+              { label: 'Answerability', score: results.aeoAnalysis.answerability },
+              { label: 'Entity Recognition', score: results.aeoAnalysis.entityRecognition },
+              { label: 'Citation Readiness', score: results.aeoAnalysis.citationReadiness },
+            ].map((d) => (
+              <div
+                key={d.label}
+                className="flex items-center justify-between rounded-lg border border-purple-200 bg-white p-3 dark:border-purple-700 dark:bg-purple-900"
+              >
+                <span className="text-xs text-gray-600 dark:text-gray-400">{d.label}</span>
+                <span className={`text-sm font-bold ${scoreColor(d.score)}`}>{d.score}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* Summary */}
+          <p className="mt-4 text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+            {results.aeoAnalysis.summary}
+          </p>
+
+          {/* Recommendations */}
+          {results.aeoAnalysis.recommendations.length > 0 && (
+            <div className="mt-4 space-y-2">
+              <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                Recommendations
+              </p>
+              {results.aeoAnalysis.recommendations.map((rec, i) => (
+                <div
+                  key={i}
+                  className="flex items-start gap-2 rounded-lg border border-purple-200 bg-white p-3 dark:border-purple-700 dark:bg-purple-900"
+                >
+                  <span className="mt-0.5 shrink-0 text-purple-500 text-sm font-bold">{i + 1}.</span>
+                  <p className="text-sm text-gray-800 dark:text-gray-200">{rec}</p>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      ) : (
+        <div className="rounded-xl border border-gray-200 p-6 dark:border-gray-700 dark:bg-gray-900">
+          <h2 className="mb-1 text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-widest">
+            Answer Engine Optimization (AEO)
+          </h2>
+          <p className="mt-3 text-sm text-gray-400 dark:text-gray-500">
+            AEO analysis is currently unavailable. This feature requires the Gemini API.
+          </p>
+        </div>
+      )}
+
+      {/* llms.txt status */}
+      <div className="rounded-xl border border-gray-200 p-6 dark:border-gray-700 dark:bg-gray-900">
+        <h2 className="mb-1 text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-widest">
+          llms.txt Status
+        </h2>
+        {results.aeoData.llmsTxt.exists ? (
+          <dl className="mt-3 space-y-2 text-sm">
+            <div className="flex justify-between">
+              <dt className="text-gray-500 dark:text-gray-400">Status</dt>
+              <dd className="font-medium text-green-700 dark:text-green-400">Found</dd>
+            </div>
+            {results.aeoData.llmsTxt.contentLength !== null && (
+              <div className="flex justify-between">
+                <dt className="text-gray-500 dark:text-gray-400">Content Length</dt>
+                <dd className="font-medium text-gray-900 dark:text-gray-100">
+                  {results.aeoData.llmsTxt.contentLength} bytes
+                </dd>
+              </div>
+            )}
+            <p className="text-xs text-gray-400 dark:text-gray-500 mt-2">
+              /llms.txt helps LLM crawlers discover and cite your content more effectively.
+            </p>
+          </dl>
+        ) : (
+          <div className="mt-3">
+            <p className="text-sm text-gray-400 dark:text-gray-500">No /llms.txt found</p>
+            <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">
+              Adding an llms.txt file helps LLM-based answer engines discover your content.
+            </p>
+          </div>
+        )}
+      </div>
 
       {/* Extracted data */}
       <div className="rounded-xl border border-gray-200 p-6 dark:border-gray-700 dark:bg-gray-900">
