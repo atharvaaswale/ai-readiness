@@ -1,5 +1,4 @@
-
-const PSI_API_KEY = "AIzaSyDbnekA214zYb66ZFb-5IRYimgrfI-AsEk"//process.env.GOOGLE_PSI_API_KEY;
+const PSI_API_KEY = process.env.GOOGLE_PSI_API_KEY;
 const TEST_URL = 'https://www.cococusto.com/'; 
 
 async function testPageSpeedInsights() {
