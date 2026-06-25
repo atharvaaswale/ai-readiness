@@ -82,6 +82,7 @@ function parsePageSpeedResponse(data: Record<string, unknown>, debugLog: string[
 
 export async function fetchPageSpeed(url: string): Promise<PageSpeedData> {
   const debugLog: string[] = []
+  const startTime = Date.now()
 
   const apiKey = process.env.GOOGLE_PSI_API_KEY
   if (!apiKey) {
@@ -90,6 +91,7 @@ export async function fetchPageSpeed(url: string): Promise<PageSpeedData> {
     return emptyPageSpeedData(debugLog.join('; '))
   }
   debugLog.push('API key loaded')
+  console.log(`[PageSpeed] Starting request for ${url} at ${new Date(startTime).toISOString()}`)
 
   const targetApiUrl = new URL('https://www.googleapis.com/pagespeedonline/v5/runPagespeed')
   targetApiUrl.searchParams.append('url', url)
@@ -99,13 +101,20 @@ export async function fetchPageSpeed(url: string): Promise<PageSpeedData> {
 
   const requestUrl = targetApiUrl.toString()
   debugLog.push(`Request URL: ${requestUrl.replace(apiKey, 'REDACTED')}`)
+  console.log(`[PageSpeed] GET ${requestUrl.replace(apiKey, 'REDACTED')}`)
 
   const controller = new AbortController()
-  const timeoutId = setTimeout(() => controller.abort(), LIMITS.PAGESPEED_TIMEOUT_MS)
+  const timeoutId = setTimeout(() => {
+    const elapsed = Date.now() - startTime
+    console.warn(`[PageSpeed] Aborting request after ${elapsed}ms (timeout: ${LIMITS.PAGESPEED_TIMEOUT_MS}ms)`)
+    controller.abort()
+  }, LIMITS.PAGESPEED_TIMEOUT_MS)
 
   try {
     const response = await fetch(requestUrl, { signal: controller.signal })
-    debugLog.push(`Response status: ${response.status}`)
+    const elapsed = Date.now() - startTime
+    debugLog.push(`Response status: ${response.status} after ${elapsed}ms`)
+    console.log(`[PageSpeed] Response received: status=${response.status}, elapsed=${elapsed}ms`)
 
     if (!response.ok) {
       const body = await response.text().catch(() => 'no body')
@@ -115,22 +124,26 @@ export async function fetchPageSpeed(url: string): Promise<PageSpeedData> {
     }
 
     const raw: Record<string, unknown> = await response.json()
+    const parseElapsed = Date.now() - startTime
     debugLog.push('Response JSON parsed successfully')
     debugLog.push(`Top-level keys: ${Object.keys(raw).join(', ')}`)
+    console.log(`[PageSpeed] JSON parsed: keys=${Object.keys(raw).length}, elapsed=${parseElapsed}ms`)
 
     const result = parsePageSpeedResponse(raw, debugLog)
-    console.log('[PageSpeed] Debug:', debugLog.join('; '))
+    const totalElapsed = Date.now() - startTime
+    console.log(`[PageSpeed] Completed successfully: score=${result.performanceScore}, elapsed=${totalElapsed}ms`)
     return result
   } catch (err) {
+    const elapsed = Date.now() - startTime
     if (err && typeof err === 'object' && (err as Record<string, unknown>).name === 'AbortError') {
-      debugLog.push(`Request timed out after ${LIMITS.PAGESPEED_TIMEOUT_MS}ms`)
-      console.error('[PageSpeed] Request timed out')
+      debugLog.push(`Request timed out after ${elapsed}ms (limit: ${LIMITS.PAGESPEED_TIMEOUT_MS}ms)`)
+      console.error(`[PageSpeed] Request timed out after ${elapsed}ms`)
     } else {
       const msg = err && typeof err === 'object'
         ? ((err as Record<string, unknown>).message as string) || String(err)
         : String(err)
-      debugLog.push(`Fetch error: ${msg}`)
-      console.error('[PageSpeed] Fetch error:', msg)
+      debugLog.push(`Fetch error at ${elapsed}ms: ${msg}`)
+      console.error(`[PageSpeed] Fetch error at ${elapsed}ms:`, msg)
     }
     return emptyPageSpeedData(debugLog.join('; '))
   } finally {

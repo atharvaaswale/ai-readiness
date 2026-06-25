@@ -1,6 +1,6 @@
 
-const PSI_API_KEY = process.env.GOOGLE_PSI_API_KEY;
-const TEST_URL = 'https://www.thesheffieldmusicstore.co.uk/'; 
+const PSI_API_KEY = "AIzaSyDbnekA214zYb66ZFb-5IRYimgrfI-AsEk"//process.env.GOOGLE_PSI_API_KEY;
+const TEST_URL = 'https://www.cococusto.com/'; 
 
 async function testPageSpeedInsights() {
   if (!PSI_API_KEY) {
@@ -19,7 +19,7 @@ async function testPageSpeedInsights() {
   try {
     // const response = await fetch(targetApiUrl.toString(), { method: 'GET' });
     const controller = new AbortController();
-const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 seconds limit
+const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 seconds limit
 
 const response = await fetch(targetApiUrl.toString(), { 
   method: 'GET',

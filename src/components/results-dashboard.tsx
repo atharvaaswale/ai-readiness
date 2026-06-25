@@ -205,8 +205,8 @@ export function ResultsDashboard({ results }: ResultsDashboardProps) {
         {results.pageSpeedData.performanceScore !== null ? (
           <>
             <div className="mt-3 flex items-center gap-3">
-              <span className={`text-2xl font-black ${scoreColor(results.performanceScore)}`}>
-                {results.performanceScore}/100
+              <span className={`text-2xl font-black ${scoreColor(results.pageSpeedData.performanceScore!)}`}>
+                {results.pageSpeedData.performanceScore}/100
               </span>
               <span className="text-sm text-gray-500 dark:text-gray-400">Performance Score</span>
             </div>
@@ -252,7 +252,7 @@ export function ResultsDashboard({ results }: ResultsDashboardProps) {
         ) : (
           <div>
             <p className="mt-3 text-sm text-gray-400 dark:text-gray-500">
-              PageSpeed Insights data could not be fetched
+              PageSpeed Insights data is currently unavailable
             </p>
             {results.pageSpeedData.debug && (
               <p className="mt-2 text-xs text-red-400 dark:text-red-500 break-all">

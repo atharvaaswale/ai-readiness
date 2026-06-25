@@ -45,7 +45,7 @@ export interface BasicAnalyzeResponse {
   robotsScore: number
   sitemapScore: number
   imageAccessibilityScore: number
-  performanceScore: number
+  performanceScore: number | null
   // Extended analysis data
   semanticElements: { detected: string[]; missing: string[] }
   detectedSchemas: string[]

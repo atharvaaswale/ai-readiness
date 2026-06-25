@@ -75,18 +75,20 @@ export async function POST(request: Request) {
       ...llmsTxtResult.findings,
     ]
 
-    const deterministicScoreValues = [
+    const performanceScore = performanceResult.pageSpeedData.performanceScore
+
+    const scoreValues = [
       seoResult.score,
       headingResult.score,
       semanticResult.score,
       sdResult.score,
       imageResult.score,
-      performanceResult.score,
+      ...(performanceScore !== null ? [performanceResult.score] : []),
       robotsResult.score,
       sitemapResult.score,
     ]
     const deterministicOverall = Math.round(
-      deterministicScoreValues.reduce((a, b) => a + b, 0) / deterministicScoreValues.length
+      scoreValues.reduce((a, b) => a + b, 0) / scoreValues.length
     )
 
     const dimensionScores: Record<string, number> = {
@@ -95,7 +97,7 @@ export async function POST(request: Request) {
       semanticHtmlScore: semanticResult.score,
       structuredDataScore: sdResult.score,
       imageAccessibilityScore: imageResult.score,
-      performanceScore: performanceResult.score,
+      ...(performanceScore !== null ? { performanceScore } : {}),
       robotsScore: robotsResult.score,
       sitemapScore: sitemapResult.score,
     }
@@ -126,7 +128,7 @@ export async function POST(request: Request) {
       robotsScore: robotsResult.score,
       sitemapScore: sitemapResult.score,
       imageAccessibilityScore: imageResult.score,
-      performanceScore: performanceResult.score,
+      performanceScore: performanceScore,
       semanticElements: {
         detected: semanticResult.detected,
         missing: semanticResult.missing,
